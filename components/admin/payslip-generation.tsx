@@ -194,11 +194,11 @@ export default function PayslipGeneration({ credentials }: PayslipGenerationProp
               <div className="space-y-3">
                 <div className="flex justify-between text-slate-300">
                   <span>Base Salary:</span>
-                  <span className="font-medium">${payslip.baseSalary?.toLocaleString()}</span>
+                  <span className="font-medium">₹{payslip.baseSalary?.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span>Per Day Salary:</span>
-                  <span className="font-medium">${payslip.perDaySalary?.toFixed(2)}</span>
+                  <span className="font-medium">₹{payslip.perDaySalary?.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span>Total Days in Month:</span>
@@ -215,7 +215,7 @@ export default function PayslipGeneration({ credentials }: PayslipGenerationProp
 
                 <div className="border-t border-slate-700 pt-3 flex justify-between text-lg">
                   <span className="text-white font-semibold">Calculated Salary:</span>
-                  <span className="font-bold text-blue-400">${payslip.calculatedSalary?.toFixed(2)}</span>
+                  <span className="font-bold text-blue-400">₹{payslip.calculatedSalary?.toFixed(2)}</span>
                 </div>
               </div>
 

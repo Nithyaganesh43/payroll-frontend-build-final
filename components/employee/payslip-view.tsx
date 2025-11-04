@@ -82,12 +82,15 @@ export default function PayslipView({ credentials }: PayslipViewProps) {
             <label className="text-sm text-slate-300 block mb-2">Month</label>
             <select
               value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number.parseInt(e.target.value))}
-              className="bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2"
-            >
+              onChange={(e) =>
+                setSelectedMonth(Number.parseInt(e.target.value))
+              }
+              className="bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2">
               {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                 <option key={m} value={m}>
-                  {new Date(2025, m - 1).toLocaleDateString("en-US", { month: "long" })}
+                  {new Date(2025, m - 1).toLocaleDateString('en-US', {
+                    month: 'long',
+                  })}
                 </option>
               ))}
             </select>
@@ -98,9 +101,11 @@ export default function PayslipView({ credentials }: PayslipViewProps) {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number.parseInt(e.target.value))}
-              className="bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2"
-            >
-              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map((y) => (
+              className="bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2">
+              {Array.from(
+                { length: 5 },
+                (_, i) => new Date().getFullYear() - 2 + i
+              ).map((y) => (
                 <option key={y} value={y}>
                   {y}
                 </option>
@@ -110,22 +115,29 @@ export default function PayslipView({ credentials }: PayslipViewProps) {
         </div>
 
         {error && (
-          <div className="p-3 bg-red-900/20 border border-red-700/50 rounded-lg text-red-300 text-sm mb-4">{error}</div>
+          <div className="p-3 bg-red-900/20 border border-red-700/50 rounded-lg text-red-300 text-sm mb-4">
+            {error}
+          </div>
         )}
 
         {payslip ? (
           <div className="space-y-6">
             <div className="border-b border-slate-700 pb-4">
-              <h3 className="text-xl font-bold text-white mb-4">Payslip Details</h3>
+              <h3 className="text-xl font-bold text-white mb-4">
+                Payslip Details
+              </h3>
               <div className="grid md:grid-cols-2 gap-4 text-slate-300 text-sm">
                 <div>
-                  <span className="text-slate-400">Employee Name:</span> {payslip.employee.name}
+                  <span className="text-slate-400">Employee Name:</span>{' '}
+                  {payslip.employee.name}
                 </div>
                 <div>
-                  <span className="text-slate-400">Employee ID:</span> {payslip.employee.empId}
+                  <span className="text-slate-400">Employee ID:</span>{' '}
+                  {payslip.employee.empId}
                 </div>
                 <div>
-                  <span className="text-slate-400">Period:</span> {payslip.month}/{payslip.year}
+                  <span className="text-slate-400">Period:</span>{' '}
+                  {payslip.month}/{payslip.year}
                 </div>
               </div>
             </div>
@@ -133,11 +145,15 @@ export default function PayslipView({ credentials }: PayslipViewProps) {
             <div className="space-y-3">
               <div className="flex justify-between text-slate-300">
                 <span>Base Salary:</span>
-                <span className="font-medium">${payslip.baseSalary?.toLocaleString()}</span>
+                <span className="font-medium">
+                  ₹{payslip.baseSalary?.toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between text-slate-300">
                 <span>Per Day Salary:</span>
-                <span className="font-medium">${payslip.perDaySalary?.toFixed(2)}</span>
+                <span className="font-medium">
+                  ₹{payslip.perDaySalary?.toFixed(2)}
+                </span>
               </div>
               <div className="flex justify-between text-slate-300">
                 <span>Total Days in Month:</span>
@@ -145,33 +161,40 @@ export default function PayslipView({ credentials }: PayslipViewProps) {
               </div>
               <div className="flex justify-between text-slate-300">
                 <span>Present Days:</span>
-                <span className="font-medium text-green-400">{payslip.presentDays}</span>
+                <span className="font-medium text-green-400">
+                  {payslip.presentDays}
+                </span>
               </div>
               <div className="flex justify-between text-slate-300">
                 <span>Absent Days:</span>
-                <span className="font-medium text-red-400">{payslip.totalDaysInMonth - payslip.presentDays}</span>
+                <span className="font-medium text-red-400">
+                  {payslip.totalDaysInMonth - payslip.presentDays}
+                </span>
               </div>
 
               <div className="border-t border-slate-700 pt-3 flex justify-between text-lg">
-                <span className="text-white font-semibold">Calculated Salary:</span>
-                <span className="font-bold text-blue-400">${payslip.calculatedSalary?.toFixed(2)}</span>
+                <span className="text-white font-semibold">
+                  Calculated Salary:
+                </span>
+                <span className="font-bold text-blue-400">
+                  ₹{payslip.calculatedSalary?.toFixed(2)}
+                </span>
               </div>
             </div>
 
             <Button
               onClick={downloadPDF}
-              className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
-            >
+              className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2">
               <Download className="w-4 h-4" />
               Download as PDF
             </Button>
           </div>
         ) : (
           <div className="text-center py-8 text-slate-400">
-            {loading ? "Loading payslip..." : "No payslip data available"}
+            {loading ? 'Loading payslip...' : 'No payslip data available'}
           </div>
         )}
       </Card>
     </div>
-  )
+  );
 }
