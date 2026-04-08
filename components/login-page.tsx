@@ -6,9 +6,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
+import { apiUrl } from "@/lib/api"
 import { AlertCircle, LogIn } from "lucide-react"
-
-const API_BASE_URL = "https://hrpayrollmanagementsystembackend.onrender.com"
 
 interface LoginPageProps {
   onAuthSuccess: (state: any) => void
@@ -28,7 +27,7 @@ export default function LoginPage({ onAuthSuccess }: LoginPageProps) {
 
     try {
       const endpoint = role === "admin" ? "/admin/login" : "/employee/login"
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const response = await fetch(apiUrl(endpoint), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),

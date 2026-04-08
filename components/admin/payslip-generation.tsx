@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { apiUrl } from "@/lib/api"
 import { Download, Eye } from "lucide-react"
-
-const API_BASE_URL = "https://hrpayrollmanagementsystembackend.onrender.com"
+import PayslipReport from "@/components/payslip/payslip-report"
 
 interface PayslipGenerationProps {
   credentials: any
@@ -26,7 +26,7 @@ export default function PayslipGeneration({ credentials }: PayslipGenerationProp
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/employees/list`, {
+      const response = await fetch(apiUrl("/admin/employees/list"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -48,7 +48,7 @@ export default function PayslipGeneration({ credentials }: PayslipGenerationProp
     setLoading(true)
     setError("")
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/payslip/generate`, {
+      const response = await fetch(apiUrl("/admin/payslip/generate"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -63,9 +63,11 @@ export default function PayslipGeneration({ credentials }: PayslipGenerationProp
       if (data.ok) {
         setPayslip(data.payslip)
       } else {
+        setPayslip(null)
         setError(data.error || "Failed to generate payslip")
       }
     } catch (err) {
+      setPayslip(null)
       setError("Network error")
     } finally {
       setLoading(false)
@@ -75,7 +77,7 @@ export default function PayslipGeneration({ credentials }: PayslipGenerationProp
   const downloadPDF = async () => {
     if (!selectedEmployee) return
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/payslip/pdf`, {
+      const response = await fetch(apiUrl("/admin/payslip/pdf"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -86,12 +88,16 @@ export default function PayslipGeneration({ credentials }: PayslipGenerationProp
           year: selectedYear,
         }),
       })
+      if (!response.ok) {
+        throw new Error("Failed to generate payslip PDF")
+      }
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
       a.download = `payslip-${selectedMonth}-${selectedYear}.pdf`
       a.click()
+      window.URL.revokeObjectURL(url)
     } catch (err) {
       setError("Failed to download PDF")
     }
@@ -101,17 +107,16 @@ export default function PayslipGeneration({ credentials }: PayslipGenerationProp
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-white">Generate Payslips</h2>
 
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Selection Panel */}
-        <Card className="md:col-span-1 bg-slate-800 border-slate-700 p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">Select Details</h3>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="p-6 md:col-span-1 border-slate-700 bg-slate-800">
+          <h3 className="mb-4 text-lg font-semibold text-white">Select Details</h3>
           <div className="space-y-4">
             <div>
-              <label className="text-sm text-slate-300 block mb-2">Employee</label>
+              <label className="mb-2 block text-sm text-slate-300">Employee</label>
               <select
                 value={selectedEmployee || ""}
                 onChange={(e) => setSelectedEmployee(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2"
+                className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white"
               >
                 <option value="">Choose employee...</option>
                 {employees.map((emp) => (
@@ -123,11 +128,11 @@ export default function PayslipGeneration({ credentials }: PayslipGenerationProp
             </div>
 
             <div>
-              <label className="text-sm text-slate-300 block mb-2">Month</label>
+              <label className="mb-2 block text-sm text-slate-300">Month</label>
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(Number.parseInt(e.target.value))}
-                className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2"
+                className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white"
               >
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                   <option key={m} value={m}>
@@ -138,11 +143,11 @@ export default function PayslipGeneration({ credentials }: PayslipGenerationProp
             </div>
 
             <div>
-              <label className="text-sm text-slate-300 block mb-2">Year</label>
+              <label className="mb-2 block text-sm text-slate-300">Year</label>
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(Number.parseInt(e.target.value))}
-                className="w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-3 py-2"
+                className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-white"
               >
                 {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map((y) => (
                   <option key={y} value={y}>
@@ -155,80 +160,35 @@ export default function PayslipGeneration({ credentials }: PayslipGenerationProp
             <Button
               onClick={generatePayslip}
               disabled={!selectedEmployee || loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full bg-blue-600 text-white hover:bg-blue-700"
             >
-              <Eye className="w-4 h-4 mr-2" />
+              <Eye className="mr-2 h-4 w-4" />
               Generate Payslip
             </Button>
           </div>
         </Card>
 
-        {/* Payslip Display */}
-        <Card className="md:col-span-2 bg-slate-800 border-slate-700 p-6">
+        <Card className="p-6 md:col-span-2 border-slate-700 bg-slate-800">
           {error && (
-            <div className="p-3 bg-red-900/20 border border-red-700/50 rounded-lg text-red-300 text-sm mb-4">
+            <div className="mb-4 rounded-lg border border-red-700/50 bg-red-900/20 p-3 text-sm text-red-300">
               {error}
             </div>
           )}
 
           {payslip ? (
             <div className="space-y-6">
-              <div className="border-b border-slate-700 pb-4">
-                <h3 className="text-xl font-bold text-white mb-2">Payslip</h3>
-                <div className="grid md:grid-cols-2 gap-4 text-slate-300 text-sm">
-                  <div>
-                    <span className="text-slate-400">Employee:</span> {payslip.employee.name}
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Employee ID:</span> {payslip.employee.empId}
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Period:</span> {payslip.month}/{payslip.year}
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Position:</span> {payslip.employee.role}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between text-slate-300">
-                  <span>Base Salary:</span>
-                  <span className="font-medium">₹{payslip.baseSalary?.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between text-slate-300">
-                  <span>Per Day Salary:</span>
-                  <span className="font-medium">₹{payslip.perDaySalary?.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-slate-300">
-                  <span>Total Days in Month:</span>
-                  <span className="font-medium">{payslip.totalDaysInMonth}</span>
-                </div>
-                <div className="flex justify-between text-slate-300">
-                  <span>Present Days:</span>
-                  <span className="font-medium text-green-400">{payslip.presentDays}</span>
-                </div>
-                <div className="flex justify-between text-slate-300">
-                  <span>Absent Days:</span>
-                  <span className="font-medium text-red-400">{payslip.totalDaysInMonth - payslip.presentDays}</span>
-                </div>
-
-                <div className="border-t border-slate-700 pt-3 flex justify-between text-lg">
-                  <span className="text-white font-semibold">Calculated Salary:</span>
-                  <span className="font-bold text-blue-400">₹{payslip.calculatedSalary?.toFixed(2)}</span>
-                </div>
-              </div>
+              <PayslipReport payslip={payslip} audience="admin" />
 
               <Button
                 onClick={downloadPDF}
-                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                className="flex w-full items-center justify-center gap-2 bg-green-600 text-white hover:bg-green-700"
               >
-                <Download className="w-4 h-4" />
+                <Download className="h-4 w-4" />
                 Download as PDF
               </Button>
             </div>
           ) : (
-            <div className="text-center py-8 text-slate-400">Select employee and click Generate to view payslip</div>
+            <div className="py-8 text-center text-slate-400">Select employee and click Generate to view payslip</div>
           )}
         </Card>
       </div>

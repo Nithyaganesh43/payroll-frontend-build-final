@@ -4,8 +4,7 @@ import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
-const API_BASE_URL = "https://hrpayrollmanagementsystembackend.onrender.com"
+import { apiUrl } from "@/lib/api"
 
 interface AttendanceViewProps {
   credentials: any
@@ -14,6 +13,7 @@ interface AttendanceViewProps {
 export default function AttendanceView({ credentials }: AttendanceViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [attendance, setAttendance] = useState<any[]>([])
+  const [holidays, setHolidays] = useState<any[]>([])
   const [summary, setSummary] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -26,7 +26,7 @@ export default function AttendanceView({ credentials }: AttendanceViewProps) {
     setLoading(true)
     setError("")
     try {
-      const response = await fetch(`${API_BASE_URL}/employee/attendance`, {
+      const response = await fetch(apiUrl("/employee/attendance"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -39,6 +39,7 @@ export default function AttendanceView({ credentials }: AttendanceViewProps) {
       const data = await response.json()
       if (data.ok) {
         setAttendance(data.attendance || [])
+        setHolidays(data.holidays || [])
         setSummary(data.summary)
       } else {
         setError(data.error || "Failed to fetch attendance")
@@ -58,15 +59,26 @@ export default function AttendanceView({ credentials }: AttendanceViewProps) {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay()
   }
 
+  const formatDateKey = (date: Date) => {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+      date.getDate(),
+    ).padStart(2, "0")}`
+  }
+
   const daysInMonth = getDaysInMonth(currentDate)
   const firstDay = getFirstDayOfMonth(currentDate)
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
   const emptyDays = Array.from({ length: firstDay }, (_, i) => i)
 
   const getAttendanceStatus = (day: number) => {
-    const dateStr = new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toISOString().split("T")[0]
-    const record = attendance.find((a) => new Date(a.date).toISOString().split("T")[0] === dateStr)
+    const dateStr = formatDateKey(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))
+    const record = attendance.find((a) => formatDateKey(new Date(a.date)) === dateStr)
     return record?.status || null
+  }
+
+  const getHoliday = (day: number) => {
+    const dateStr = formatDateKey(new Date(currentDate.getFullYear(), currentDate.getMonth(), day))
+    return holidays.find((holiday) => formatDateKey(new Date(holiday.date)) === dateStr)
   }
 
   return (
@@ -75,7 +87,7 @@ export default function AttendanceView({ credentials }: AttendanceViewProps) {
 
       {error && <div className="p-4 bg-red-900/20 border border-red-700/50 rounded-lg text-red-300">{error}</div>}
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-4 gap-6">
         {/* Summary Cards */}
         <Card className="bg-slate-800 border-slate-700 p-6">
           <p className="text-slate-400 text-sm mb-2">Present Days</p>
@@ -86,8 +98,13 @@ export default function AttendanceView({ credentials }: AttendanceViewProps) {
           <p className="text-3xl font-bold text-red-400">{summary?.absentDays || 0}</p>
         </Card>
         <Card className="bg-slate-800 border-slate-700 p-6">
-          <p className="text-slate-400 text-sm mb-2">Total Records</p>
+          <p className="text-slate-400 text-sm mb-2">Marked Working Days</p>
           <p className="text-3xl font-bold text-blue-400">{summary?.totalRecords || 0}</p>
+        </Card>
+        <Card className="bg-slate-800 border-slate-700 p-6">
+          <p className="text-slate-400 text-sm mb-2">Holidays / No Work Days</p>
+          <p className="text-3xl font-bold text-amber-300">{summary?.holidayDays || 0}</p>
+          <p className="mt-2 text-xs text-slate-500">Working days: {summary?.workingDays || 0}</p>
         </Card>
       </div>
 
@@ -131,11 +148,14 @@ export default function AttendanceView({ credentials }: AttendanceViewProps) {
               ))}
               {days.map((day) => {
                 const status = getAttendanceStatus(day)
+                const holiday = getHoliday(day)
                 return (
                   <div
                     key={day}
                     className={`aspect-square flex items-center justify-center rounded-lg font-medium text-sm ${
-                      status === "present"
+                      holiday
+                        ? "bg-amber-500/20 border border-amber-400 text-amber-200"
+                        : status === "present"
                         ? "bg-green-600/30 border border-green-600 text-green-300"
                         : status === "absent"
                           ? "bg-red-600/30 border border-red-600 text-red-300"
@@ -157,6 +177,10 @@ export default function AttendanceView({ credentials }: AttendanceViewProps) {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded bg-red-600"></div>
               <span className="text-slate-300">Absent</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded bg-amber-400"></div>
+              <span className="text-slate-300">Holiday / Sunday</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded bg-slate-700"></div>

@@ -6,9 +6,8 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
+import { apiUrl } from "@/lib/api"
 import { Trash2, Plus, Edit2, X, Check } from "lucide-react"
-
-const API_BASE_URL = "https://hrpayrollmanagementsystembackend.onrender.com"
 
 interface EmployeeManagementProps {
   credentials: any
@@ -40,7 +39,7 @@ export default function EmployeeManagement({ credentials }: EmployeeManagementPr
   const fetchEmployees = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/employees/list`, {
+      const response = await fetch(apiUrl("/admin/employees/list"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -63,7 +62,7 @@ export default function EmployeeManagement({ credentials }: EmployeeManagementPr
     e.preventDefault()
     setError("")
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/employees/create`, {
+      const response = await fetch(apiUrl("/admin/employees/create"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -92,7 +91,7 @@ export default function EmployeeManagement({ credentials }: EmployeeManagementPr
   const handleEditEmployee = async (employeeId: string) => {
     setError("")
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/employees/update`, {
+      const response = await fetch(apiUrl("/admin/employees/update"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -120,7 +119,7 @@ export default function EmployeeManagement({ credentials }: EmployeeManagementPr
   const handleDeleteEmployee = async (employeeId: string) => {
     if (!confirm("Are you sure?")) return
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/employees/delete`, {
+      const response = await fetch(apiUrl("/admin/employees/delete"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

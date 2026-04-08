@@ -28,7 +28,6 @@ export default function Home() {
         setAuthState(parsed)
         setLoading(false) // moved setLoading to inside the try block to ensure it's called
       } catch (err) {
-        console.error("[v0] Error parsing stored auth state:", err)
         localStorage.removeItem("authState")
         setLoading(false)
       }
